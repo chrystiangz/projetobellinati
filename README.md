@@ -1,6 +1,6 @@
 # 📊 Call Center Analytics – CDR Aspect (29/07/2025)
 
-Análise operacional de call center a partir de arquivos CDR (*Call Detail Record*) do discador **Aspect**, com foco em **qualidade de dados, métricas operacionais, SLA e insights acionáveis**.
+Análise operacional de Call Center a partir de arquivos CDR (*Call Detail Record*) do discador **Aspect**, com foco em **qualidade de dados, métricas operacionais, SLA e geração de insights acionáveis**.
 
 Projeto desenvolvido como **Teste Prático – Analista Sênior de BI**.
 
@@ -8,14 +8,17 @@ Projeto desenvolvido como **Teste Prático – Analista Sênior de BI**.
 
 ## 📌 Objetivo
 
-Transformar os dados brutos do CDR em informações e indicadores acionáveis, respondendo perguntas de negócio e apresentando visualmente os resultados:
+Transformar dados brutos de CDR em informações confiáveis e acionáveis, respondendo perguntas de negócio e suportando a tomada de decisão operacional.
+
+Principais objetivos do projeto:
 
 - Consolidar arquivos horários de CDR (08h–23h)
 - Tratar e validar a qualidade dos dados
+- Garantir tipagem correta e consistência temporal
 - Calcular KPIs operacionais e SLAs
-- Identificar anomalias de comportamento
-- Disponibilizar dashboard analítico no Looker Studio
-- Gerar documento executivo com achados e recomendações
+- Identificar comportamentos atípicos (anomalias)
+- Disponibilizar visualizações analíticas no Looker Studio
+- Gerar documentação executiva com conclusões e recomendações
 
 ---
 
@@ -23,13 +26,13 @@ Transformar os dados brutos do CDR em informações e indicadores acionáveis, r
 
 ```text
 .
-├── BASES_RAW/                    # Arquivos CDR originais (obrigatório)
+├── BASES_RAW/                    # Arquivos CDR brutos (obrigatório)
 ├── BASE_TRATADA/
 │   ├── base_tratada.csv          # Base consolidada e tratada
-│   └── relatorio_completo.xlsx   # Breve resumo com a análise dos dados filtrados
+│   └── relatorio_completo.xlsx   # Relatório técnico (qualidade, anomalias e resumo)
 ├── ARQUIVOS/                     # Credenciais e arquivos sensíveis (obrigatório, fora do Git)
-├── TRATA_DADOS.py                # Tratamento, validações e análises
-├── IMPORTADOR_BQ.py              # Carga da base tratada para o BigQuery
+├── TRATA_DADOS.py                # Tratamento, validações e cálculos analíticos
+├── IMPORTADOR_BQ.py              # Carga da base tratada no BigQuery
 ├── requirements.txt
 └── README.md
 ```
@@ -38,63 +41,72 @@ Transformar os dados brutos do CDR em informações e indicadores acionáveis, r
 
 ## ⚠️ Estrutura Obrigatória para Execução
 
-Para que o projeto funcione corretamente, é obrigatório que, na pasta onde os scripts são executados, existam as seguintes pastas:
+Para execução correta do pipeline, é obrigatória a existência das seguintes pastas no diretório raiz:
 
 ### 📁 BASES_RAW
 
-- Deve conter os arquivos CDR do Aspect, segmentados por hora.
-- Os arquivos devem estar no formato CSV conforme especificação do enunciado.
-- Essa pasta não contém tratamento prévio — os dados são brutos.
+- Contém os arquivos CDR do Aspect, segmentados por hora.
+- Formato CSV conforme especificação do enunciado.
+- Dados totalmente brutos, sem qualquer pré-tratamento.
 
 ### 📁 ARQUIVOS
 
-- Contém credenciais e configurações sensíveis, como:
-  - Chave de acesso do Google Cloud (Service Account)
-  - Arquivos `.env` com dados de e-mail/configuração
-- Por motivos de segurança, essa pasta não está versionada no GitHub.
-- Ela é disponibilizada apenas no arquivo `.zip` enviado junto ao teste.
+- Contém arquivos sensíveis e de configuração, como:
+  - Credenciais do Google Cloud (Service Account)
+  - Arquivos `.env`
+- Por questões de segurança, não é versionada no GitHub.
+- Disponibilizada apenas no `.zip` enviado junto ao teste.
 
-📌 **Sem essas duas pastas (BASES_RAW e ARQUIVOS), o pipeline não executa corretamente.**
+📌 **Sem as pastas BASES_RAW e ARQUIVOS, o projeto não executa corretamente.**
 
 ---
 
 ## 🧩 Funcionamento dos Scripts
 
-### TRATA_DADOS.py
+### 🔹 TRATA_DADOS.py
 
-Responsável por:
+Script responsável por toda a lógica de negócio e validação dos dados.
 
-- Ler todos os arquivos da pasta `BASES_RAW`
-- Consolidar os dados em um único dataset
-- Normalizar tipos, valores nulos e campos textuais
-- Calcular métricas de tempo (ring, talk, duração)
-- Calcular SLAs (15s e 30s)
-- Detectar anomalias por hora e por grupo
-- Gerar:
-  - `base_tratada.csv`
-  - `relatorio_completo.xlsx` (qualidade, tipagem, anomalias e resumo executivo)
+**Principais responsabilidades:**
 
-📌 **Este script concentra a lógica de negócio e a validação dos dados.**
+- Leitura e consolidação de todos os arquivos da pasta `BASES_RAW`
+- Normalização de tipos (datas, numéricos e textos)
+- Tratamento de valores ausentes e inconsistências
+- Cálculo de métricas temporais:
+  - Ring time
+  - Talk time
+  - Wrap time
+  - Duração total da chamada
+- Cálculo de SLAs (≤ 15s e ≤ 30s)
+- Identificação de anomalias por hora e por grupo
+- Geração dos artefatos finais:
+  - `BASE_TRATADA/base_tratada.csv`
+  - `BASE_TRATADA/relatorio_completo.xlsx`
 
-### IMPORTADOR_BQ.py
+📌 **Este script concentra engenharia de dados, regras de negócio e análise exploratória.**
 
-Responsável por:
+### 🔹 IMPORTADOR_BQ.py
 
-- Ler a base tratada (`base_tratada.csv`)
-- Criar (ou recriar) a tabela no BigQuery (camada Bronze)
-- Detectar e aplicar tipagem adequada das colunas
-- Realizar a carga em chunks (com fallback seguro para CSV)
-- Enviar notificações de sucesso ou erro (opcional)
+Script responsável pela persistência e governança dos dados no BigQuery.
 
-📌 **Este script garante persistência, rastreabilidade e governança no BigQuery.**
+**Principais responsabilidades:**
+
+- Leitura da base tratada (`base_tratada.csv`)
+- Criação ou recriação da tabela no BigQuery (camada Bronze)
+- Detecção e aplicação de tipagem adequada
+- Carga em chunks com estratégia defensiva
+- Tratamento de erros e fallback seguro
+- Suporte a notificações de execução (opcional)
+
+📌 **Este script garante rastreabilidade, reprocessamento e integridade da carga.**
 
 ---
 
-## ▶️ Como Rodar o Projeto
+## ▶️ Como Executar o Projeto
 
 ### Pré-requisitos
 
-- Python 3.9+
+- Python 3.9 ou superior
 - Projeto configurado no Google BigQuery
 - Credenciais GCP válidas (Service Account)
 - Pastas `BASES_RAW` e `ARQUIVOS` corretamente configuradas
@@ -105,13 +117,12 @@ Na pasta raiz do projeto, execute:
 
 ```bash
 pip install pipreqs
-pipreqs . --force
 pip install -r requirements.txt
 ```
 
-O arquivo `requirements.txt` já está incluso no projeto e reflete as dependências utilizadas.
+O arquivo `requirements.txt` já está incluído no projeto e reflete exatamente as dependências utilizadas.
 
-### Execução
+### Execução do Pipeline
 
 1. **Tratamento e análise dos dados**
 
@@ -125,63 +136,52 @@ python TRATA_DADOS.py
 python IMPORTADOR_BQ.py
 ```
 
-3. **Consulta da view analítica**
+3. **Acesso ao dashboard no Looker Studio**
 
-```sql
-SELECT *
-FROM SILVER.VW_CALLCENTER_KPIS;
-```
-
-4. **Abrir o dashboard no Looker Studio**
+Link disponibilizado ao final deste documento
 
 ---
 
-## ⚙️ Regras de Negócio
+## ⚙️ Premissas e Regras de Negócio
 
-### Definições de Chamadas
+### Definições Operacionais
 
 - **Chamada atendida:** `AnswerDt IS NOT NULL`
-- **Chamada não atendida:** ausência de `AnswerDt`
-- **Ring time (tempo de toque):**
+- **Chamada não atendida:** `AnswerDt IS NULL`
+- **Ring time:**
   ```
   AnswerDt - TimePhoneStartingRinging
   ```
-- **Talk time (tempo de conversa):**
+- **Talk time:**
   ```
   WrapEndDt - AnswerDt
   ```
-- **Wrap time (tempo de pós-atendimento):** período entre o fim da chamada e o fim do wrap
-- Tempos negativos ou inconsistentes são invalidados.
-
-### Métricas Calculadas
-
-- **Total de chamadas realizadas** (com e sem atendimento)
-- **Taxa de atendimento** por hora e por `ResourceGroupDesc`
-- **Tempos médios:** ring, talk e wrap
-- **Distribuição** por `Disposition_Desc`
+- **Wrap time:** período entre o término da chamada e o fim do atendimento
+- **Registros com tempos negativos ou sequências temporais ilógicas:**
+  - São excluídos das métricas
+  - Permanecem registrados para análise de qualidade
 
 ### SLA
 
-- **SLA ≤ 15s:** chamadas atendidas com ring ≤ 15 segundos
-- **SLA ≤ 30s:** chamadas atendidas com ring ≤ 30 segundos
+- **SLA ≤ 15s:** chamadas atendidas com ring time ≤ 15 segundos
+- **SLA ≤ 30s:** chamadas atendidas com ring time ≤ 30 segundos
+- O SLA é calculado exclusivamente sobre chamadas atendidas
 
 ---
 
-## 🔑 Chave Única e Observação Importante
+## 🔑 Chave Lógica e Unicidade
 
 ```text
-chave_unica = CallId + SeqNum
+chave_lógica = CallId + SeqNum
 ```
 
-⚠️ **Foram identificados vários registros com o mesmo `CallId` associados a números discados (`DialedNum`) diferentes.**
-
-Esse comportamento é inerente ao funcionamento do discador (rediscagens, tentativas automáticas e fluxos internos) e não representa erro de processamento.
+Durante a análise, foram identificados casos de mesmo `CallId` associado a múltiplos `DialedNum`, comportamento típico de discadores automáticos (rediscagens e tentativas).
 
 **Por esse motivo:**
 
-- `CallId` não é utilizado isoladamente como chave primária
+- `CallId` não é utilizado isoladamente como chave
 - A combinação `CallId + SeqNum` garante unicidade lógica
-- Duplicidades residuais são monitoradas como alerta de qualidade, não como erro crítico
+- Duplicidades residuais são tratadas como alerta de qualidade, não erro crítico
 
 ---
 
@@ -189,23 +189,24 @@ Esse comportamento é inerente ao funcionamento do discador (rediscagens, tentat
 
 São executadas validações automáticas para:
 
-- **Campos críticos ausentes:** verificação de campos obrigatórios não preenchidos
-- **Inconsistências temporais:** detecção de tempos negativos ou sequências ilógicas
-- **Duplicidade lógica:** identificação de registros duplicados
-- **Baixa taxa de preenchimento:** campos com excesso de valores nulos
-- **Validação de tipagem:** garantia de tipos corretos (datas, numéricos, textos)
+- Campos críticos ausentes
+- Inconsistências temporais
+- Duplicidade lógica
+- Baixa taxa de preenchimento
+- Validação de tipagem
 
-Os resultados detalhados estão documentados no relatório técnico:
+Os resultados detalhados estão documentados em:
 
 ```
 BASE_TRATADA/relatorio_completo.xlsx
 ```
 
-Este relatório contém:
-- Resumo de qualidade por campo
-- Estatísticas de preenchimento
-- Anomalias detectadas por hora e grupo
-- Recomendações de tratamento
+**Conteúdo do relatório:**
+
+- Estatísticas de preenchimento por campo
+- Anomalias por hora e grupo
+- Resumo executivo de qualidade
+- Recomendações de melhoria
 
 ---
 
@@ -217,63 +218,63 @@ Foi criada a view analítica:
 SILVER.VW_CALLCENTER_KPIS
 ```
 
-Essa view:
+**Características da view:**
 
-- Consolida métricas por data, hora, grupo e disposition
-- Utiliza cálculos defensivos (`SAFE_DIVIDE`, `NULLIF`)
-- Está pronta para consumo direto no Looker Studio
-- Garante consistência sob qualquer filtro aplicado
+- Métricas consolidadas por data, hora, grupo e disposition
+- Cálculos defensivos (`SAFE_DIVIDE`, `NULLIF`)
+- Pronta para consumo direto no Looker Studio
+- Consistência garantida sob qualquer filtro aplicado
 
 ---
 
 ## 📊 Dashboard
 
-O dashboard final apresenta:
+🔗 **Acessar Dashboard no Looker Studio**
 
-- **KPIs gerais do dia:** volume total, taxa de atendimento, SLA
-- **Evolução horária:** volume de chamadas, taxa de atendimento e SLA ao longo do dia (08h–23h)
-- **Comparativos por Resource Group:** distribuição e performance por grupo
-- **Distribuição por Disposition:** análise dos códigos de disposição das chamadas
-- **Detecção visual de anomalias:** horários ou grupos com comportamento atípico
-- **Insights executivos e recomendações acionáveis**
+https://lookerstudio.google.com/reporting/b2bee487-f876-4820-b8cf-bbaabd419a79
 
-🔗 **[Acessar Dashboard no Looker Studio](https://lookerstudio.google.com/reporting/b2bee487-f876-4820-b8cf-bbaabd419a79)**
+**O dashboard apresenta:**
 
-### Funcionalidades do Dashboard
+- KPIs gerais do dia
+- Evolução horária de chamadas, taxa de atendimento e SLA
+- Comparativos por ResourceGroupDesc
+- Distribuição por Disposition_Desc
+- Identificação visual de anomalias
+- Insights e recomendações acionáveis
 
-- Filtros interativos por hora, grupo e disposition
-- Visualizações de série temporal para análise de tendências
-- Comparativos lado a lado para análise de performance
-- Alertas visuais para métricas fora do padrão
+**Funcionalidades:**
+
+- Filtros interativos
+- Séries temporais
+- Comparativos lado a lado
+- Destaque visual para métricas fora do padrão
 
 ---
 
 ## 📈 Principais Insights
 
 - Pico de chamadas entre 10h–12h impacta negativamente o SLA
-- Grupo FLOW concentra o maior volume de chamadas
+- O grupo FLOW concentra o maior volume de chamadas
 - Alta incidência de chamadas sem atendimento humano
-- Recomenda-se reforço operacional e ajuste da estratégia de discagem
+- Recomendação de reforço operacional nos horários críticos
 
 ---
 
-## 📋 Glossário de Campos
+## 🔭 Fora do Escopo e Próximos Passos
 
-| Campo | Descrição |
-|-------|-----------|
-| **CallStartDt** | Data e horário de início da chamada |
-| **SeqNum** | Código de integração da chamada |
-| **CallId** | ID da chamada |
-| **DetectionDt** | Horário quando a chamada foi detectada |
-| **AnswerDt** | Horário em que a chamada foi respondida |
-| **WrapEndDt** | Horário em que houve o fim do atendimento (NULL = sem atendimento) |
-| **CallInsertDt** | Horário em que foi feito o registro da chamada no banco de dados |
-| **CallEndDt** | Horário em que a chamada terminou |
-| **TimePhoneStartingRinging** | Horário em que começou a ringar a chamada |
-| **DialedNum** | Número discado |
-| **Disp_c** | Código disposition da chamada |
-| **Disposition_Desc** | Descrição do código de disposition da chamada |
-| **ResourceGroupDesc** | Grupo de recursos utilizado na chamada |
+### Fora do escopo do teste:
+
+- Análise por operador individual
+- Correlação com campanhas ou conversão
+- Modelos preditivos
+- Análise multiday
+
+### Possíveis evoluções:
+
+- Automatização do pipeline
+- Carga incremental diária
+- Alertas automáticos de SLA
+- Integração com dados de staffing (WFM)
 
 ---
 
@@ -281,9 +282,9 @@ O dashboard final apresenta:
 
 Projeto desenvolvido com foco em:
 
-- Governança e rastreabilidade
-- Qualidade e consistência dos dados
+- Qualidade e governança de dados
+- Rastreabilidade e reprocessamento
 - Métricas confiáveis e auditáveis
-- Comunicação executiva orientada a decisão
+- Comunicação clara entre áreas técnicas e executivas
 
 Entrega alinhada ao nível Sênior de BI / Analytics.
