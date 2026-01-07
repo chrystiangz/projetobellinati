@@ -139,6 +139,8 @@ O dashboard final apresenta:
 - Detecção visual de anomalias operacionais
 - Insights executivos e recomendações acionáveis
 
+🔗 **[Acessar Dashboard no Looker Studio](https://lookerstudio.google.com/reporting/b2bee487-f876-4820-b8cf-bbaabd419a79)**
+
 ---
 
 ## 🧩 Funcionamento dos Scripts
