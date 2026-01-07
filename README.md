@@ -28,12 +28,13 @@ Principais objetivos do projeto:
 .
 ├── BASES_RAW/                    # Arquivos CDR brutos (obrigatório)
 ├── BASE_TRATADA/
-│   ├── base_tratada.csv          # Base consolidada e tratada
+│   ├── base_tratada.csv          # Base tratada
 │   └── relatorio_completo.xlsx   # Relatório técnico (qualidade, anomalias e resumo)
 ├── ARQUIVOS/                     # Credenciais e arquivos sensíveis (obrigatório, fora do Git)
 ├── TRATA_DADOS.py                # Tratamento, validações e cálculos analíticos
 ├── IMPORTADOR_BQ.py              # Carga da base tratada no BigQuery
-├── requirements.txt
+├── requirements.txt              # Arquivo com as bibliotecas necessárias para a execução dos cógigos
+├── VW_CALLCENTER_KPIS.sql        # Arquivo contendo o código SQL utilizado para criar a view dentro do BigQuery
 └── README.md
 ```
 
