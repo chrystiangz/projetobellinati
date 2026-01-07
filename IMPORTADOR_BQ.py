@@ -19,11 +19,23 @@ import tempfile
 from tqdm import tqdm
 
 # ==================== CONFIGURAÇÕES ==================== #
-CSV_PATH = r"C:\Users\CHRYSTIAN.5654\Desktop\CÓDIGOS\TRATATIVA_DADOS_CALL\BASE_TRATADA\base_tratada.csv"
-JSON_KEY_PATH = r"C:\Users\CHRYSTIAN.5654\Desktop\CÓDIGOS\TRATATIVA_DADOS_CALL\ARQUIVOS\chave_gcp.json"
-EMAIL_ENV_PATH = r"C:\Users\CHRYSTIAN.5654\Desktop\CÓDIGOS\TRATATIVA_DADOS_CALL\ARQUIVOS\dados_email.env"
-DESTINATARIOS = "guzchrystian@gmail.com;chrys.farias13@gmail.com"
+try:
+    BASE_DIR = Path(__file__).resolve().parent
+except NameError:
+    BASE_DIR = Path.cwd()
 
+# Pastas do projeto
+BASE_TRATADA_DIR = BASE_DIR / "BASE_TRATADA"
+ARQUIVOS_DIR = BASE_DIR / "ARQUIVOS"
+
+CSV_PATH = BASE_TRATADA_DIR / "base_tratada.csv"
+JSON_KEY_PATH = ARQUIVOS_DIR / "chave_gcp.json"
+EMAIL_ENV_PATH = ARQUIVOS_DIR / "dados_email.env"
+
+# Aqui devem ser preenchidos os destinatários que você deseja enviar o email assim que a carga para o BigQuery é finalizada, separados por ';':
+DESTINATARIOS = "chrys.farias13@gmail.com"
+
+# Dados do projeto no BigQuery
 PROJECT_ID = "projeto-bellinati"
 DATASET_ID = "BRONZE"
 TABLE_ID = "BASE_CALLCENTER"
@@ -32,6 +44,16 @@ LOCATION = "southamerica-east1"
 CHUNK_SIZE = 500_000
 
 # ==================== INICIALIZAÇÃO ==================== #
+
+if not CSV_PATH.exists():
+    raise FileNotFoundError(f"CSV não encontrado: {CSV_PATH}")
+if not JSON_KEY_PATH.exists():
+    raise FileNotFoundError(f"Chave GCP não encontrada: {JSON_KEY_PATH}")
+if not EMAIL_ENV_PATH.exists():
+    raise FileNotFoundError(f".env de email não encontrado: {EMAIL_ENV_PATH}")
+
+# Carrega variáveis do .env do email
+load_dotenv(dotenv_path=EMAIL_ENV_PATH)
 warnings.filterwarnings("ignore", category=UserWarning, module="pandas")
 
 # BigQuery Client

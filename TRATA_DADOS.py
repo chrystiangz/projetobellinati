@@ -1,4 +1,5 @@
 import pandas as pd
+pd.set_option("future.no_silent_downcasting", True)
 from pathlib import Path
 from tqdm import tqdm
 import time
@@ -7,14 +8,22 @@ import datetime
 from openpyxl import load_workbook
 from openpyxl.styles import Font, PatternFill, Alignment, Border, Side
 from openpyxl.utils import get_column_letter
+from pathlib import Path
 
 inicio = time.time()
 
 # ==============================
 # CONFIGURAÇÕES
 # ==============================
-PASTA_BASE = Path(r"C:\Users\CHRYSTIAN.5654\Desktop\CÓDIGOS\TRATATIVA_DADOS_CALL\BASES_RAW")
-PASTA_SAIDA = Path(r"C:\Users\CHRYSTIAN.5654\Desktop\CÓDIGOS\TRATATIVA_DADOS_CALL\BASE_TRATADA")
+BASE_DIR = Path(__file__).resolve().parent
+
+# ATENÇÃO: Os arquivos em .csv extaídos do Aspect devem estar nesta pasta:
+PASTA_BASE = BASE_DIR / "BASES_RAW"
+
+# Aqui é onde serão salvos os arquivos, da base tratada e o relatório final.
+PASTA_SAIDA = BASE_DIR / "BASE_TRATADA"
+
+PASTA_BASE.mkdir(exist_ok=True)
 PASTA_SAIDA.mkdir(exist_ok=True)
 
 ARQUIVO_TRATADO = PASTA_SAIDA / "base_tratada.csv"
@@ -63,7 +72,8 @@ for arquivo in tqdm(arquivos, desc="📂 Lendo arquivos", unit="arquivo"):
         df = df.dropna(how="all")
 
         # normaliza nulos logo na origem também
-        df.replace({"NULL": pd.NA, "null": pd.NA, "": pd.NA, " ": pd.NA}, inplace=True)
+        df = df.replace({"NULL": pd.NA, "null": pd.NA, "": pd.NA, " ": pd.NA})
+        df = df.infer_objects(copy=False)
 
         # filtra linhas sem CallStartDt
         df = df[df["CallStartDt"].notna()]
@@ -128,7 +138,8 @@ df_tipagem = pd.DataFrame(log_tipagem)
 # 3. NORMALIZA NULOS (geral)
 # ==============================
 print("\n🔄 Normalizando valores NULL...")
-cdr.replace({"NULL": pd.NA, "null": pd.NA, "": pd.NA, " ": pd.NA}, inplace=True)
+cdr = cdr.replace({"NULL": pd.NA, "null": pd.NA, "": pd.NA, " ": pd.NA})
+cdr = cdr.infer_objects(copy=False)
 
 # ==============================
 # 4. TIPAGEM DE DADOS
