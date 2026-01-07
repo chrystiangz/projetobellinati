@@ -101,6 +101,8 @@ Script responsável pela persistência e governança dos dados no BigQuery.
 
 📌 **Este script garante rastreabilidade, reprocessamento e integridade da carga.**
 
+⚙️ **Configuração de notificações:** No início do arquivo, existe a variável DESTINATARIOS que deve ser preenchida com os e-mails que receberão notificações após a execução do script.
+
 ---
 
 ## ▶️ Como Executar o Projeto
