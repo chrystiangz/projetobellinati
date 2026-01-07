@@ -287,5 +287,3 @@ Projeto desenvolvido com foco em:
 - Rastreabilidade e reprocessamento
 - Métricas confiáveis e auditáveis
 - Comunicação clara entre áreas técnicas e executivas
-
-Entrega alinhada ao nível Sênior de BI / Analytics.
