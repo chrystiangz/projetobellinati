@@ -8,11 +8,14 @@ Projeto desenvolvido como **Teste Prático – Analista Sênior de BI**.
 
 ## 📌 Objetivo
 
+Transformar os dados brutos do CDR em informações e indicadores acionáveis, respondendo perguntas de negócio e apresentando visualmente os resultados:
+
 - Consolidar arquivos horários de CDR (08h–23h)
 - Tratar e validar a qualidade dos dados
 - Calcular KPIs operacionais e SLAs
 - Identificar anomalias de comportamento
 - Disponibilizar dashboard analítico no Looker Studio
+- Gerar documento executivo com achados e recomendações
 
 ---
 
@@ -122,23 +125,40 @@ python TRATA_DADOS.py
 python IMPORTADOR_BQ.py
 ```
 
-3. **Abrir o dashboard no Looker Studio**
+3. **Consulta da view analítica**
+
+```sql
+SELECT *
+FROM SILVER.VW_CALLCENTER_KPIS;
+```
+
+4. **Abrir o dashboard no Looker Studio**
 
 ---
 
 ## ⚙️ Regras de Negócio
 
+### Definições de Chamadas
+
 - **Chamada atendida:** `AnswerDt IS NOT NULL`
 - **Chamada não atendida:** ausência de `AnswerDt`
-- **Ring time:**
+- **Ring time (tempo de toque):**
   ```
   AnswerDt - TimePhoneStartingRinging
   ```
-- **Talk time:**
+- **Talk time (tempo de conversa):**
   ```
   WrapEndDt - AnswerDt
   ```
+- **Wrap time (tempo de pós-atendimento):** período entre o fim da chamada e o fim do wrap
 - Tempos negativos ou inconsistentes são invalidados.
+
+### Métricas Calculadas
+
+- **Total de chamadas realizadas** (com e sem atendimento)
+- **Taxa de atendimento** por hora e por `ResourceGroupDesc`
+- **Tempos médios:** ring, talk e wrap
+- **Distribuição** por `Disposition_Desc`
 
 ### SLA
 
@@ -169,16 +189,23 @@ Esse comportamento é inerente ao funcionamento do discador (rediscagens, tentat
 
 São executadas validações automáticas para:
 
-- Campos críticos ausentes
-- Inconsistências temporais (tempos negativos)
-- Duplicidade lógica
-- Baixa taxa de preenchimento
+- **Campos críticos ausentes:** verificação de campos obrigatórios não preenchidos
+- **Inconsistências temporais:** detecção de tempos negativos ou sequências ilógicas
+- **Duplicidade lógica:** identificação de registros duplicados
+- **Baixa taxa de preenchimento:** campos com excesso de valores nulos
+- **Validação de tipagem:** garantia de tipos corretos (datas, numéricos, textos)
 
 Os resultados detalhados estão documentados no relatório técnico:
 
 ```
 BASE_TRATADA/relatorio_completo.xlsx
 ```
+
+Este relatório contém:
+- Resumo de qualidade por campo
+- Estatísticas de preenchimento
+- Anomalias detectadas por hora e grupo
+- Recomendações de tratamento
 
 ---
 
@@ -203,14 +230,21 @@ Essa view:
 
 O dashboard final apresenta:
 
-- KPIs gerais do dia
-- Evolução horária de volume, taxa de atendimento e SLA
-- Comparativos por Resource Group
-- Distribuição por Disposition
-- Detecção visual de anomalias operacionais
-- Insights executivos e recomendações acionáveis
+- **KPIs gerais do dia:** volume total, taxa de atendimento, SLA
+- **Evolução horária:** volume de chamadas, taxa de atendimento e SLA ao longo do dia (08h–23h)
+- **Comparativos por Resource Group:** distribuição e performance por grupo
+- **Distribuição por Disposition:** análise dos códigos de disposição das chamadas
+- **Detecção visual de anomalias:** horários ou grupos com comportamento atípico
+- **Insights executivos e recomendações acionáveis**
 
 🔗 **[Acessar Dashboard no Looker Studio](https://lookerstudio.google.com/reporting/b2bee487-f876-4820-b8cf-bbaabd419a79)**
+
+### Funcionalidades do Dashboard
+
+- Filtros interativos por hora, grupo e disposition
+- Visualizações de série temporal para análise de tendências
+- Comparativos lado a lado para análise de performance
+- Alertas visuais para métricas fora do padrão
 
 ---
 
@@ -220,6 +254,26 @@ O dashboard final apresenta:
 - Grupo FLOW concentra o maior volume de chamadas
 - Alta incidência de chamadas sem atendimento humano
 - Recomenda-se reforço operacional e ajuste da estratégia de discagem
+
+---
+
+## 📋 Glossário de Campos
+
+| Campo | Descrição |
+|-------|-----------|
+| **CallStartDt** | Data e horário de início da chamada |
+| **SeqNum** | Código de integração da chamada |
+| **CallId** | ID da chamada |
+| **DetectionDt** | Horário quando a chamada foi detectada |
+| **AnswerDt** | Horário em que a chamada foi respondida |
+| **WrapEndDt** | Horário em que houve o fim do atendimento (NULL = sem atendimento) |
+| **CallInsertDt** | Horário em que foi feito o registro da chamada no banco de dados |
+| **CallEndDt** | Horário em que a chamada terminou |
+| **TimePhoneStartingRinging** | Horário em que começou a ringar a chamada |
+| **DialedNum** | Número discado |
+| **Disp_c** | Código disposition da chamada |
+| **Disposition_Desc** | Descrição do código de disposition da chamada |
+| **ResourceGroupDesc** | Grupo de recursos utilizado na chamada |
 
 ---
 
